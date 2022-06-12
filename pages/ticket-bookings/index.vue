@@ -22,6 +22,17 @@
               <b-row>
                 <b-col lg="6" sm="12" class="my-2">
                   <b-form-group>
+                    <label>Filter Bar</label>
+                    <b-form-select
+                      id="filter-input"
+                      v-model="form.filter_ticket_type"
+                      :options="ticket_types"
+                    ></b-form-select>
+                  </b-form-group>
+                </b-col>
+
+                <!-- <b-col lg="6" sm="12" class="my-2">
+                  <b-form-group>
                     <label for="date-datepicker">Filter Bar</label>
                     <b-form-input
                       id="filter-input"
@@ -30,7 +41,7 @@
                       placeholder="Type to Search Ticket-Type"
                     ></b-form-input>
                   </b-form-group>
-                </b-col>
+                </b-col> -->
 
                 <b-col lg="6" sm="12" class="my-2">
                   <label for="date-datepicker">Choose a date</label>
@@ -41,14 +52,31 @@
                   ></b-form-datepicker>
                 </b-col>
               </b-row>
-            </div>
-            <div class="button-position">
-              <b-button type="reset" variant="warning" class="mr-2"
-                >Clear</b-button
-              >
-              <b-button type="submit" variant="primary"
-                ><BIconSearch /> Search
-              </b-button>
+
+              <b-row>
+                <b-col lg="6" sm="12" class="my-2">
+                  <b-form-group>
+                    <label for="date-datepicker">Email User</label>
+                    <b-form-input
+                      id="filter-email-input"
+                      v-model="form.filter_user_email"
+                      type="search"
+                      placeholder="Type to Search Email_user"
+                    ></b-form-input>
+                  </b-form-group>
+                </b-col>
+
+                <b-col lg="6" sm="12" class="my-2">
+                  <div class="button-position">
+                    <b-button type="reset" variant="warning" class="mr-2"
+                      >Clear</b-button
+                    >
+                    <b-button type="submit" variant="primary"
+                      ><BIconSearch /> Search
+                    </b-button>
+                  </div>
+                </b-col>
+              </b-row>
             </div>
           </b-form>
         </b-col>
@@ -66,7 +94,9 @@
           <template #cell(actions)="row">
             <b-button
               size="sm"
-              @click="info(row.item, row.index, $event.target)"
+              @click="
+                deleteModalTicketBooking(row.item, row.index, $event.target)
+              "
               class="mr-1"
             >
               <BIconTrashFill /> Delete
@@ -87,17 +117,20 @@
             ></b-pagination>
           </b-col>
         </div>
-        <!-- Info modal -->
+
+        <!-- Eelete modal -->
         <b-modal
-          :id="infoModal.id"
-          :title="infoModal.title"
-          @ok="onDelete(infoModal.row)"
-          @hide="resetInfoModal"
+          :id="deleteModal.id"
+          :title="deleteModal.title"
+          @ok="onDelete(deleteModal.row)"
+          @hide="resetDeleteModal"
         >
-          <pre>
-Are you sure to delete, Ticket Type id = {{ infoModal.row.id }}</pre
-          >
+          <div>
+            Are you sure to delete, Ticket Booking User Email Name
+            <b>{{ deleteModal.row.user_email }} </b>?
+          </div>
         </b-modal>
+        <!-- End of Delelte Modal -->
       </b-container>
       <!-- End of Scope -->
     </div>
@@ -127,33 +160,41 @@ export default {
       // Header Field
       fields: [
         {
-          key: "ticket_type_id",
+          key: "ticket_type",
           label: "Ticket Type",
           sortable: true,
           sortDirection: "desc",
         },
-        // { key: "price", label: "Price", sortable: true, sortDirection: "desc" },
         {
           key: "created_at",
           label: "Booked At",
           sortable: true,
           sortDirection: "desc",
         },
+        {
+          key: "user_email",
+          label: "Email User",
+          sortable: true,
+          sortDirection: "desc",
+        },
         { key: "actions", label: "Actions" },
       ],
       // Form Search
+      ticket_types: [{ value: null, text: "Please select an option" }],
+      ticket_type_items: [],
       show: true,
       form: {
         filter_ticket_type: null,
         filter_created_at: "",
+        filter_user_email: "",
       },
       // Pagination
       totalRows: 1,
       currentPage: 1,
       perPage: 10,
       // Modal Delete
-      infoModal: {
-        id: "info-modal",
+      deleteModal: {
+        id: "delete-modal",
         title: "",
         content: "",
         row: {},
@@ -164,9 +205,26 @@ export default {
   mounted() {
     // Set the initial number of items
     // Fetch Ticket-Booking
+    this.fetchTicketType();
     this.fetchTicketBooking();
   },
   methods: {
+    async fetchTicketType() {
+      try {
+        const results = await APIClient.getTicketType();
+        this.ticket_type_items = results;
+        results.filter((item) => {
+          this.ticket_types.push({ value: item.id, text: item.ticket_type });
+        });
+      } catch (error) {
+        this.$notify({
+          title: "Fetch Ticket Type Data Failed",
+          type: "warn",
+          text: `Can't Fetch data ${error?.message}`,
+          width: 700,
+        });
+      }
+    },
     async fetchTicketBooking() {
       try {
         const query = {
@@ -174,6 +232,7 @@ export default {
           limit: this.perPage,
           ticket_type_id: this.form.filter_ticket_type,
           created_at: this.form.filter_created_at,
+          user_email: this.form.filter_user_email,
         };
 
         const results = await APIClient.getTicketBooking(query);
@@ -183,6 +242,7 @@ export default {
           created_at: dayjs(item?.created_at, DEFAULT_TIME_ZONE).format(
             DEFAULT_FORMAT_DATE
           ),
+          ticket_type: this.onAdjustTicketType(item),
         }));
 
         this.totalRows = results.meta.totalItems;
@@ -197,6 +257,15 @@ export default {
         });
       }
     },
+    onAdjustTicketType(ticketBooking) {
+      const foundId = this.ticket_type_items.find(
+        (item) => item.id == ticketBooking?.ticket_type_id
+      );
+      if (foundId) {
+        return foundId?.ticket_type;
+      }
+      return "";
+    },
     onSubmit(event) {
       event.preventDefault();
 
@@ -208,6 +277,7 @@ export default {
       // Reset our form values
       this.form.filter_ticket_type = null;
       this.form.filter_created_at = "";
+      this.form.filter_user_email = "";
       // Trick to reset/clear native browser form validation state
       this.show = false;
       this.$nextTick(() => {
@@ -224,16 +294,16 @@ export default {
       this.currentPage = value;
       this.fetchTicketBooking();
     },
-    info(item, index, button) {
-      this.infoModal.title = `Action Delete index: ${item.id}`;
-      this.infoModal.row = item;
+    deleteModalTicketBooking(item, index, button) {
+      this.deleteModal.title = `Action Delete index: ${item.id}`;
+      this.deleteModal.row = item;
 
-      this.$root.$emit("bv::show::modal", this.infoModal.id, button);
+      this.$root.$emit("bv::show::modal", this.deleteModal.id, button);
     },
-    resetInfoModal() {
-      this.infoModal.title = "";
-      this.infoModal.content = "";
-      this.infoModal.row = {};
+    resetDeleteModal() {
+      this.deleteModal.title = "";
+      this.deleteModal.content = "";
+      this.deleteModal.row = {};
     },
     async onDelete(item) {
       try {
@@ -242,7 +312,7 @@ export default {
         this.$notify({
           title: "Action Completed",
           type: "success",
-          text: `Ticket Type ${item?.id} has been deleted!`,
+          text: `Ticket Booking User Email Name ${item?.user_email} has been deleted!`,
           width: 700,
         });
       } catch (error) {
@@ -271,6 +341,9 @@ export default {
 
 .button-position {
   display: flex;
+  align-items: center;
+  height: 100%;
+  margin-top: 8px;
   justify-content: flex-end;
 }
 
