@@ -60,7 +60,7 @@
           :items="ticketBookings"
           :fields="fields"
           :current-page="currentPage"
-          :per-page="perPage"
+          :per-page="0"
           @filtered="onFiltered"
         >
           <template #cell(actions)="row">
@@ -80,12 +80,24 @@
               v-model="currentPage"
               :total-rows="totalRows"
               :per-page="perPage"
+              @change="handlePageChange"
               align="fill"
               size="sm"
               class="my-0"
             ></b-pagination>
           </b-col>
         </div>
+        <!-- Info modal -->
+        <b-modal
+          :id="infoModal.id"
+          :title="infoModal.title"
+          @ok="onDelete(infoModal.row)"
+          @hide="resetInfoModal"
+        >
+          <pre>
+Are you sure to delete, Ticket Type id = {{ infoModal.row.id }}</pre
+          >
+        </b-modal>
       </b-container>
       <!-- End of Scope -->
     </div>
@@ -93,10 +105,12 @@
 </template>
 
 <script>
+import dayjs from "dayjs";
 import Nav from "../../components/site/Nav.vue";
 import Breadcrumb from "../../components/site/Breadcrumb.vue";
 import { BIconTrashFill, BIconSearch } from "bootstrap-vue";
-import APIClient from "../../utils/APIClient"
+import APIClient from "../../utils/APIClient";
+import { DEFAULT_TIME_ZONE, DEFAULT_FORMAT_DATE } from "../../utils/Constants";
 
 export default {
   data() {
@@ -109,21 +123,16 @@ export default {
         },
       ],
       // Items
-      ticketBookings: [
-        { ticket_type: "Dickerson", price: 40, created_at: "12:12" },
-        { ticket_type: "Larsen", price: 21, created_at: "13:12" },
-        { ticket_type: "Geneva", price: 89, created_at: "12:23" },
-        { ticket_type: "Jami", price: 38, created_at: "11:22" },
-      ],
+      ticketBookings: [],
       // Header Field
       fields: [
         {
-          key: "ticket_type",
+          key: "ticket_type_id",
           label: "Ticket Type",
           sortable: true,
           sortDirection: "desc",
         },
-        { key: "price", label: "Price", sortable: true, sortDirection: "desc" },
+        // { key: "price", label: "Price", sortable: true, sortDirection: "desc" },
         {
           key: "created_at",
           label: "Booked At",
@@ -141,29 +150,58 @@ export default {
       // Pagination
       totalRows: 1,
       currentPage: 1,
-      perPage: 5,
+      perPage: 10,
+      // Modal Delete
+      infoModal: {
+        id: "info-modal",
+        title: "",
+        content: "",
+        row: {},
+      },
     };
   },
   components: { Nav, Breadcrumb, BIconTrashFill, BIconSearch },
   mounted() {
     // Set the initial number of items
-    this.totalRows = this.ticketBookings.length;
-
     // Fetch Ticket-Booking
     this.fetchTicketBooking();
   },
   methods: {
-    async fetchTicketBooking(){
+    async fetchTicketBooking() {
       try {
-        const results = await APIClient.getTicketBooking()
-        console.log('results :>> ', results);
-      } catch (error){
-        console.log('error :>> ', error);
+        const query = {
+          page: this.currentPage,
+          limit: this.perPage,
+          ticket_type_id: this.form.filter_ticket_type,
+          created_at: this.form.filter_created_at,
+        };
+
+        const results = await APIClient.getTicketBooking(query);
+
+        this.ticketBookings = results?.items.map((item) => ({
+          ...item,
+          created_at: dayjs(item?.created_at, DEFAULT_TIME_ZONE).format(
+            DEFAULT_FORMAT_DATE
+          ),
+        }));
+
+        this.totalRows = results.meta.totalItems;
+        this.currentPage = results.meta.currentPage;
+        this.perPage = results.meta.itemsPerPage;
+      } catch (error) {
+        this.$notify({
+          title: "Fetch Data Failed",
+          type: "warn",
+          text: `Can't Fetch data ${error?.message}`,
+          width: 700,
+        });
       }
     },
     onSubmit(event) {
       event.preventDefault();
-      alert(JSON.stringify(this.form));
+
+      this.currentPage = 1;
+      this.fetchTicketBooking();
     },
     onReset(event) {
       event.preventDefault();
@@ -175,11 +213,49 @@ export default {
       this.$nextTick(() => {
         this.show = true;
       });
+      this.fetchTicketBooking();
     },
     onFiltered(filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
       this.totalRows = filteredItems.length;
       this.currentPage = 1;
+    },
+    handlePageChange(value) {
+      this.currentPage = value;
+      this.fetchTicketBooking();
+    },
+    info(item, index, button) {
+      this.infoModal.title = `Action Delete index: ${item.id}`;
+      this.infoModal.row = item;
+
+      this.$root.$emit("bv::show::modal", this.infoModal.id, button);
+    },
+    resetInfoModal() {
+      this.infoModal.title = "";
+      this.infoModal.content = "";
+      this.infoModal.row = {};
+    },
+    async onDelete(item) {
+      try {
+        await APIClient.deleteTicketBooking(item?.id);
+
+        this.$notify({
+          title: "Action Completed",
+          type: "success",
+          text: `Ticket Type ${item?.id} has been deleted!`,
+          width: 700,
+        });
+      } catch (error) {
+        this.$notify({
+          title: "Action Failed",
+          type: "warn",
+          text: `Can't delete "${item?.id}" ${error?.message}`,
+          width: 700,
+        });
+      }
+
+      this.currentPage = 1;
+      this.fetchTicketBooking();
     },
   },
 };

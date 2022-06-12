@@ -1,5 +1,6 @@
 <template>
   <div>
+    <notifications position="bottom right"/>
     <b-navbar toggleable="lg" type="light" variant="info">
       <b-navbar-brand href="#">Ticket-Management-System</b-navbar-brand>
 

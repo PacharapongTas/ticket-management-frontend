@@ -62,7 +62,7 @@ export default class CoreAPI {
 
         finalUrl = `${publicRuntimeConfig.API_URL}${url}`;
         finalUrl = UrlUtils.buildAbsolute(finalUrl, queryObject);
-        console.log('finalUrl :>> ', finalUrl);
+
         try {
             const result = await axios(finalUrl, {
                 method,
@@ -74,7 +74,6 @@ export default class CoreAPI {
                     return CoreAPI.isValidStatus(status);
                 },
             });
-            console.log('result :>> ', result);
 
             return result?.data;
 
