@@ -59,7 +59,7 @@
               <b-button type="reset" variant="danger" class="mr-2"
                 >Reset</b-button
               >
-              <b-button type="submit" variant="primary">Submit</b-button>
+              <b-button type="submit" variant="primary">Booking</b-button>
             </div>
           </b-form>
         </div>

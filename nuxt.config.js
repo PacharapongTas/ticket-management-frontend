@@ -1,6 +1,9 @@
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
+    env: {
+      ENV: process.env.ENV || ''
+    },
     title: 'ticket-management-frontend',
     htmlAttrs: {
       lang: 'en'
