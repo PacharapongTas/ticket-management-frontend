@@ -48,7 +48,7 @@
         </b-col>
         <!-- End of Filter -->
 
-        <label class="mr-3 primary-text"
+        <label class="mr-3 remark-text"
           >***Ticket Type like A, B, C and D should not delete.</label
         >
 
@@ -174,7 +174,7 @@ import Nav from "../../components/site/Nav.vue";
 import Breadcrumb from "../../components/site/Breadcrumb.vue";
 import { BIconPencilFill, BIconTrashFill, BIconSearch } from "bootstrap-vue";
 import APIClient from "../../utils/APIClient";
-import { PREVENT_DELETE_VALUE } from "../../utils/Constants";
+import { BAD_REQUEST_WITH_DESCRIPTION, PREVENT_DELETE_VALUE } from "../../utils/Constants";
 
 export default {
   data() {
@@ -396,7 +396,7 @@ export default {
         this.$notify({
           title: "Action Failed",
           type: "warn",
-          text: `Can't delete "${item?.id}" ${error?.message}`,
+          text: `Can't delete "${item?.id}" ${error?.status == 400 && BAD_REQUEST_WITH_DESCRIPTION}`,
           width: 700,
         });
       }
@@ -424,7 +424,7 @@ export default {
   justify-content: flex-end;
 }
 
-.primary-text {
+.remark-text {
   color: darksalmon;
 }
 

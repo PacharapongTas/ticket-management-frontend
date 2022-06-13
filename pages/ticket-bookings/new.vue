@@ -196,7 +196,7 @@ export default {
 
         this.quantity_max = current_price.daily_quota - results;
 
-        if (this.quantity_max == 0) {
+        if (this.quantity_max <= 0) {
           this.out_of_stock = true;
         } else {
           this.out_of_stock = false;

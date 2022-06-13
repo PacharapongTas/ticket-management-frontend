@@ -9,23 +9,13 @@
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
           <b-nav-item href="#">
-            <nuxt-link to="/ticket-bookings">Ticket-Booking</nuxt-link>
+            <nuxt-link to="/ticket-bookings"><span class="tab-text-color">Ticket-Booking</span></nuxt-link>
           </b-nav-item>
           <b-nav-item href="#">
-            <nuxt-link to="/ticket-types">Ticket-Type</nuxt-link>
+            <nuxt-link to="/ticket-types"><span class="tab-text-color">Ticket-Type</span></nuxt-link>
           </b-nav-item>
         </b-navbar-nav>
 
-        <!-- Right aligned nav items -->
-        <!-- <b-navbar-nav class="ml-auto">
-          <b-nav-item-dropdown right>
-            <template #button-content>
-              <em>User</em>
-            </template>
-            <b-dropdown-item href="#">Profile</b-dropdown-item>
-            <b-dropdown-item href="#">Sign Out</b-dropdown-item>
-          </b-nav-item-dropdown>
-        </b-navbar-nav> -->
       </b-collapse>
     </b-navbar>
   </div>
@@ -39,5 +29,8 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="css" scoped>
+  .tab-text-color {
+    color: white;
+  }
 </style>

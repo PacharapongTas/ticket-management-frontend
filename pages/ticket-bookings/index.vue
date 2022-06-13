@@ -31,18 +31,6 @@
                   </b-form-group>
                 </b-col>
 
-                <!-- <b-col lg="6" sm="12" class="my-2">
-                  <b-form-group>
-                    <label for="date-datepicker">Filter Bar</label>
-                    <b-form-input
-                      id="filter-input"
-                      v-model="form.filter_ticket_type"
-                      type="search"
-                      placeholder="Type to Search Ticket-Type"
-                    ></b-form-input>
-                  </b-form-group>
-                </b-col> -->
-
                 <b-col lg="6" sm="12" class="my-2">
                   <label for="date-datepicker">Choose a date</label>
                   <b-form-datepicker
@@ -81,6 +69,10 @@
           </b-form>
         </b-col>
         <!-- End of Filter -->
+
+        <label class="mr-3 remark-text"
+          >***When Ticket was Booking, These Ticket should't edit.</label
+        >
 
         <b-table
           striped
@@ -345,6 +337,10 @@ export default {
   height: 100%;
   margin-top: 8px;
   justify-content: flex-end;
+}
+
+.remark-text {
+  color: darksalmon;
 }
 
 .table-pagination {

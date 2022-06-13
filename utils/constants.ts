@@ -27,3 +27,5 @@ export interface ICREATETICKETTYPE {
     daily_quota: number;
     minimum: number;
 }
+
+export const BAD_REQUEST_WITH_DESCRIPTION = "This Ticket already in used with Ticket Booking";

@@ -1,12 +1,18 @@
 <template>
   <!-- <Tutorial/> -->
-  <div> Hello MML </div>
+  <div></div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from "vue";
 
 export default Vue.extend({
-  name: 'IndexPage'
-})
+  name: "IndexPage",
+  data() {
+    return {};
+  },mounted() {
+    // Redirect to Ticket-bookings
+    this.$router.push("/ticket-bookings");
+  },
+});
 </script>
